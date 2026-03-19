@@ -6,12 +6,12 @@ set -e
 # ==========================================
 
 # Configuration variables (Ideally passed via command line or a config file)
-PROJECT_DIR="/media/user/New_Volume/ngs" # Path to the project directory
-REFERENCE="${PROJECT_DIR}/resources/reference/hg38.fa" # Path to the reference genome
-RESULTS_DIR="${PROJECT_DIR}/results" # Path to the results directory
-DATA_DIR="${PROJECT_DIR}/input" # Path to the data directory
-SAMPLE="demo_1" # Sample name
-THREADS=6 # Number of threads to use
+PROJECT_DIR="/media/user/New_Volume/ngs" # update Path to the project directory
+REFERENCE="${PROJECT_DIR}/resources/reference/hg38.fa" # update Path to the reference genome
+RESULTS_DIR="${PROJECT_DIR}/results" # update Path to the results directory
+DATA_DIR="${PROJECT_DIR}/input" # update Path to the data directory
+SAMPLE="demo_1" # update Sample name
+THREADS=6 # update Number of threads to use according your system
 
 # ==========================================
 # Pre-Run Validation Checks
