@@ -1,0 +1,47 @@
+# NGS Pipeline Configuration
+project_name: "Basic WES NGS Pipeline"
+description: "A standardized configuration for Whole Exome Sequencing analysis."
+
+# Paths and Directories
+project_dir: "/media/user/New_Volume/ngs"
+directories:
+  input_data: "${project_dir}/input"
+  results_dir: "${project_dir}/results"
+  qc_dir: "${project_dir}/results/qc"
+  trimmed_dir: "${project_dir}/results/trimmed"
+  reference_genome: "${project_dir}/resources/reference/hg38.fa"
+
+# Sample Information
+samples:
+  - id: "demo_1"
+    fastq_r1: "${project_dir}/input/demo_1_R1.fastq.gz"
+    fastq_r2: "${project_dir}/input/demo_1_R2.fastq.gz"
+
+# Hardware / Processing
+execution:
+  threads: 6
+  memory_gb: 16
+
+# Tool-specific parameters
+trim_galore:
+  quality: 20
+  length: 20
+
+gatk:
+  variant_filtration:
+    - name: "LowQD"
+      expression: "QD < 2.0"
+    - name: "HighFS"
+      expression: "FS > 60.0"
+    - name: "LowMQ"
+      expression: "MQ < 40.0"
+    - name: "HighSOR"
+      expression: "SOR > 3.0"
+    - name: "LowMQRankSum"
+      expression: "MQRankSum < -12.5"
+    - name: "LowReadPosRankSum"
+      expression: "ReadPosRankSum < -8.0"
+    - name: "LowDepth"
+      expression: "DP < 20"
+    - name: "HighDepth"
+      expression: "DP > 500"
