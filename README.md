@@ -5,7 +5,7 @@ This repository contains a simple, linear Next-Generation Sequencing (NGS) pipel
 ## Pipeline Steps
 
 The pipeline incorporates the following standard industry practices:
-0. **Quality Control & Trimming:** `fastqc` assesses read quality and `trim_galore` removes sequencing adapters and low-quality sequences to minimize noise.
+0. **Quality Control & Trimming:** `fastqc` assesses read quality and `trim_galore` removes sequencing adapters and low-quality sequences (defaulting to `--quality 20` and `--length 50`) to minimize noise. For advanced trimming options, consult the [Trim Galore User Guide](https://github.com/FelixKrueger/TrimGalore/blob/master/Docs/Trim_Galore_User_Guide.md).
 1. **Alignment:** Trimmed reads are aligned to the reference genome (`hg38.fa`) using `bwa mem`, then sorted via `samtools sort`.
 2. **Duplicate Marking:** Eliminates PCR or optical duplicates using `gatk MarkDuplicates` to prevent biased variant calling.
 3. **Base Quality Score Recalibration (BQSR):** Detects and corrects systematic errors made by the sequencing machine in estimating base quality scores using `gatk BaseRecalibrator` and `ApplyBQSR`.

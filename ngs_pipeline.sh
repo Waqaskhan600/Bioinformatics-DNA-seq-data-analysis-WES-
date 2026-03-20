@@ -123,6 +123,8 @@ fastqc -t ${THREADS} -o ${RESULTS_DIR}/qc \
 
 echo "Step 0.2: Trimming adapters and low-quality bases..."
 trim_galore --paired --fastqc --cores ${THREADS} \
+    --quality 20 \
+    --length 50 \
     -o ${RESULTS_DIR}/trimmed \
     ${DATA_DIR}/${SAMPLE}_R1.fastq.gz ${DATA_DIR}/${SAMPLE}_R2.fastq.gz
 
