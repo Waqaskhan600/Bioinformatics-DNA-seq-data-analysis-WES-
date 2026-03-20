@@ -9,7 +9,7 @@ The pipeline incorporates the following standard industry practices:
 1. **Alignment:** Trimmed reads are aligned to the reference genome (`hg38.fa`) using `bwa mem`, then sorted via `samtools sort`.
 2. **Duplicate Marking:** Eliminates PCR or optical duplicates using `gatk MarkDuplicates` to prevent biased variant calling.
 3. **Base Quality Score Recalibration (BQSR):** Detects and corrects systematic errors made by the sequencing machine in estimating base quality scores using `gatk BaseRecalibrator` and `ApplyBQSR`.
-4. **WES Quality Metrics:** Calculates on-target capture efficiency and multiplexed depth coverage statistics using `gatk CollectHsMetrics` and `gatk DepthOfCoverage`.
+4. **WES Quality Metrics:** Calculates general alignment statistics, insert sizes, and on-target capture efficiency using `gatk CollectAlignmentSummaryMetrics`, `CollectInsertSizeMetrics`, `CollectHsMetrics` and `DepthOfCoverage`.
 5. **Variant Calling:** Scans the recalibrated alignment to identify SNPs and Indels using `gatk HaplotypeCaller`.
 6. **Variant Filtration:** Applies rigorous, fixed thresholds adapted specifically for high-coverage WES data using `gatk VariantFiltration`.
 7. **Quality Extraction:** Excludes heavily filtered calls, leaving only high-confidence (`PASS`) variants using `bcftools view`.
@@ -118,21 +118,27 @@ By using multiple tools, you gain different perspectives on each variant and bui
 
 ## Understanding WES Quality Metrics
 
-When evaluating the `results/qc/*_hs_metrics.txt` and `coverage` files, keep an eye on these critical WES-specific metrics:
+When evaluating the `results/qc/` reports (`_hs_metrics.txt`, `_alignment_summary.txt`, and `_insert_size_metrics.txt`), keep an eye on these critical WES-specific metrics:
 
-1. **ON_TARGET_BASES:** Percentage of sequenced bases that fall within your target capture regions.
+1. **PCT_PF_READS_ALIGNED (Alignment Summary):** Percentage of reads aligned to the reference.
+   * Standard: >95% for reliable human read data.
+2. **PF_MISMATCH_RATE (Alignment Summary):** Rate of mismatches to the reference.
+   * Standard: <5% (high mismatch rates imply DNA degradation or species contamination).
+3. **INSERT_SIZE (Insert Size Metrics):** Distance between paired reads.
+   * Expected: WES target kits typically fragment DNA smaller than WGS to tightly fit exons. Expect a clean bell curve around **150-250bp**.
+4. **ON_TARGET_BASES (HsMetrics):** Percentage of sequenced bases that fall within your target capture regions.
    * Excellent: >80%
    * Good: 70-80%
    * Poor: <70%
-2. **MEAN_TARGET_COVERAGE:** Average coverage depth across target regions.
+5. **MEAN_TARGET_COVERAGE:** Average coverage depth across target regions.
    * Clinical applications: >100x
    * Research applications: >50x
-3. **PCT_TARGET_BASES_10X/20X/30X:** Percentage of targets successfully covered at various depths.
+6. **PCT_TARGET_BASES_10X/20X/30X:** Percentage of targets successfully covered at various depths.
    * Clinical quality: >95% at 20x coverage
-4. **FOLD_ENRICHMENT:** How much more coverage the targeted regions received versus the genome average.
+7. **FOLD_ENRICHMENT:** How much more coverage the targeted regions received versus the genome average.
    * Good enrichment: >40-fold
    * Poor enrichment: <20-fold
-5. **AT_DROPOUT and GC_DROPOUT:** Coverage uniformity across different GC content.
+8. **AT_DROPOUT and GC_DROPOUT:** Coverage uniformity across different GC content.
    * Good uniformity: <10% dropout
    * Problematic: >20% dropout
 

@@ -165,6 +165,18 @@ gatk DepthOfCoverage \
     --summaryCoverageThreshold 50 \
     --summaryCoverageThreshold 100
 
+echo "Step 4.2: Collecting general alignment summary metrics..."
+gatk CollectAlignmentSummaryMetrics \
+    -R ${REFERENCE} \
+    -I ${RESULTS_DIR}/aligned/${SAMPLE}_bqsr.bam \
+    -O ${RESULTS_DIR}/qc/${SAMPLE}_alignment_summary.txt
+ 
+echo "Step 4.3: Collecting paired-end insert size metrics..."
+gatk CollectInsertSizeMetrics \
+    -I ${RESULTS_DIR}/aligned/${SAMPLE}_bqsr.bam \
+    -O ${RESULTS_DIR}/qc/${SAMPLE}_insert_size_metrics.txt \
+    -H ${RESULTS_DIR}/qc/${SAMPLE}_insert_size_histogram.pdf
+
 # 5. Variant Calling with GATK HaplotypeCaller
 echo "Step 5: Variant Calling..."
 gatk HaplotypeCaller \
