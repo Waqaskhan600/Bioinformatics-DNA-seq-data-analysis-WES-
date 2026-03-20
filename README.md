@@ -135,3 +135,57 @@ When evaluating the `results/qc/*_hs_metrics.txt` and `coverage` files, keep an 
 5. **AT_DROPOUT and GC_DROPOUT:** Coverage uniformity across different GC content.
    * Good uniformity: <10% dropout
    * Problematic: >20% dropout
+
+## Best Practices for WES Analysis
+
+### Quality Control Standards
+**Coverage Requirements:**
+* **Mean target coverage:** >100x for clinical applications, >50x for research
+* **Coverage uniformity:** >95% of targets at 20x depth
+* **On-target rate:** >80% for optimal results
+
+**Performance Benchmarks:**
+* **Variant calling sensitivity:** >95% for variants >20x coverage
+* **Specificity:** >99% after proper filtering
+* **Reproducibility:** >98% concordance between technical replicates
+
+## Common Pitfalls and Solutions
+
+### Technical Issues
+
+1. **Low On-Target Rate (<70%)**
+   * **Causes:** Wrong target file, poor capture, sample degradation
+   * **Solutions:** Verify target file, check capture kit lot, assess DNA quality
+   * **Prevention:** Use exact manufacturer target files, validate protocols
+
+2. **Uneven Coverage Across Targets**
+   * **Causes:** GC bias, capture probe efficiency, PCR artifacts
+   * **Solutions:** GC bias correction, optimize PCR conditions
+   * **Monitoring:** Track coverage uniformity metrics
+
+3. **High False Positive Rate**
+   * **Causes:** Insufficient filtering, capture artifacts, systematic biases
+   * **Solutions:** Apply WES-specific filters, use population databases
+   * **Validation:** Confirm suspicious variants with Sanger sequencing
+
+### Analytical Issues
+
+1. **Missing Expected Variants**
+   * **Causes:** Low coverage in specific exons, variant in non-captured regions
+   * **Solutions:** Manual review of coverage, consider WGS for negative cases
+   * **Prevention:** Review capture kit content for genes of interest
+
+2. **CNV False Positives**
+   * **Causes:** Capture bias, reference sample selection, systematic artifacts
+   * **Solutions:** Use WES-specific CNV tools, validate with orthogonal methods
+   * **Prevention:** Include adequate normal samples in reference
+
+3. **Batch Effects**
+   * **Causes:** Different capture lots, library prep variations, sequencing platforms
+   * **Solutions:** Batch correction methods, standardized protocols
+   * **Prevention:** Process samples consistently, track batch information
+
+4. **Somatic Mutation Artifacts**
+   * **Causes:** DNA degradation, FFPE artifacts, low tumor purity
+   * **Solutions:** Optimize filtering parameters, use orientation bias models
+   * **Prevention:** Use high-quality samples, validate tumor content
