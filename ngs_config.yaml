@@ -10,6 +10,10 @@ directories:
   qc_dir: "${project_dir}/results/qc"
   trimmed_dir: "${project_dir}/results/trimmed"
   reference_genome: "${project_dir}/resources/reference/hg38.fa"
+  known_sites_dbsnp: "${project_dir}/resources/reference/Homo_sapiens_assembly38.dbsnp138.vcf.gz"
+  known_sites_indels: "${project_dir}/resources/reference/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"
+  target_regions: "${project_dir}/resources/reference/target_regions.bed"
+  target_intervals: "${project_dir}/resources/reference/target_regions.interval_list"
 
 # Sample Information
 samples:

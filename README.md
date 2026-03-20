@@ -1,4 +1,3 @@
-# Bioinformatics-DNA-seq-data-analysis-WES-
 # Basic Whole Exome Sequencing (WES) Pipeline
 
 This repository contains a simple, linear Next-Generation Sequencing (NGS) pipeline using bash for paired-end FastQ data processing, optimized for Whole Exome Sequencing (WES).
@@ -9,10 +8,13 @@ The pipeline incorporates the following standard industry practices:
 0. **Quality Control & Trimming:** `fastqc` assesses read quality and `trim_galore` removes sequencing adapters and low-quality sequences to minimize noise.
 1. **Alignment:** Trimmed reads are aligned to the reference genome (`hg38.fa`) using `bwa mem`, then sorted via `samtools sort`.
 2. **Duplicate Marking:** Eliminates PCR or optical duplicates using `gatk MarkDuplicates` to prevent biased variant calling.
-3. **Variant Calling:** Scans the alignment to identify SNPs and Indels using `gatk HaplotypeCaller`.
-4. **Variant Filtration:** Applies rigorous, fixed thresholds adapted specifically for high-coverage WES data (e.g., Depth, Quality by Depth, Mapping Quality, etc.) using `gatk VariantFiltration`.
-5. **Quality Extraction:** Excludes heavily filtered calls, leaving only high-confidence (`PASS`) variants using `bcftools view`.
-6. **CSV Conversion:** Converts the final `PASS` variants VCF into an Excel-compatible Comma-Separated Values (`.csv`) file using `gatk VariantsToTable` and basic `awk` formatting.
+3. **Base Quality Score Recalibration (BQSR):** Detects and corrects systematic errors made by the sequencing machine in estimating base quality scores using `gatk BaseRecalibrator` and `ApplyBQSR`.
+4. **WES Quality Metrics:** Calculates on-target capture efficiency and multiplexed depth coverage statistics using `gatk CollectHsMetrics` and `gatk DepthOfCoverage`.
+5. **Variant Calling:** Scans the recalibrated alignment to identify SNPs and Indels using `gatk HaplotypeCaller`.
+6. **Variant Filtration:** Applies rigorous, fixed thresholds adapted specifically for high-coverage WES data using `gatk VariantFiltration`.
+7. **Quality Extraction:** Excludes heavily filtered calls, leaving only high-confidence (`PASS`) variants using `bcftools view`.
+8. **CSV Conversion:** Converts the final `PASS` variants VCF into an Excel-compatible Comma-Separated Values (`.csv`) file.
+9. **Variant Annotation:** Structurally and functionally annotates the resulting variants to understand their biological impact.
 
 ## Installation & Setup
 
@@ -50,6 +52,26 @@ samtools faidx hg38.fa
 ```
 *Note: Make sure that `REFERENCE` inside `ngs_pipeline.sh` points to the absolute path of the `hg38.fa` file you just downloaded.*
 
+## WES Target Capture Kits
+
+Whole Exome Sequencing explicitly targets specific regions of the genome using probes or "baits". **Critical Point:** Always use the exact target region file (`.bed` or `.interval_list`) that matches your capture kit. Using the wrong target file will lead to incorrect quality metrics, missed variants, and suboptimal variant calling. 
+
+You must place your target regions BED file at `resources/reference/target_regions.bed` (or configure `TARGET_REGIONS` in the shell script). Common panels include:
+* **Agilent SureSelect** – Uses RNA baits, excellent uniformity
+* **Illumina Nextera** – DNA baits, good for degraded samples
+* **Roche SeqCap** – DNA baits, customizable designs
+* **Twist Bioscience** – Synthetic DNA baits, latest technology
+
+**GATK Interval List Format:**
+Critical quality control tools like `CollectHsMetrics` require the BED file to be converted into a GATK-specific `.interval_list` format with a standard SAM/BAM header. If you only have the `.bed` file, you can easily convert it using:
+```bash
+# Create interval list for GATK
+gatk BedToIntervalList \
+    -I resources/reference/target_regions.bed \
+    -O resources/reference/target_regions.interval_list \
+    -SD resources/reference/hg38.dict
+```
+
 ## Usage
 
 *Note: The pipeline includes built-in **Pre-Run Validation Checks** that will ensure you have correctly downloaded the reference genome and placed your input data before executing any bioinformatics tools. If anything is missing, the script will halt immediately and provide the exact commands you need to fix the issue!*
@@ -75,3 +97,41 @@ The pipeline automatically generates a structured output directory system branch
 - **`trimmed/`**: Cleaned paired-end fastq files produced by trim_galore.
 - **`results/aligned/`**: Sorted BAMs, GATK duplicate metrics, and duplicate-marked BAMs.
 - **`results/variants/`**: Unfiltered VCFs, hard-filtered VCFs, final `PASS` VCFs, and the final converted Excel-compatible `.csv` variant sheets.
+
+## Variant Annotation
+
+Once you have your final VCF, you can heavily annotate your variants to predict their clinical or biological consequences through various external tools such as:
+* [wANNOVAR](https://wannovar.wglab.org/) 
+* [Ensembl VEP](https://www.ensembl.org/Tools/VEP)
+* SnpEff
+* GATK Funcotator
+
+### Why Use Multiple Annotation Tools?
+No single tool provides complete information. Each has unique strengths:
+
+* **GATK Funcotator** – GATK’s native annotator with a clinical database focus
+* **Ensembl VEP** – Comprehensive consequence prediction with extensive options
+* **SnpEff** – Fast annotation with powerful filtering capabilities
+* **ANNOVAR** – Excellent for population frequency analysis
+
+By using multiple tools, you gain different perspectives on each variant and build confidence in your interpretations.
+
+## Understanding WES Quality Metrics
+
+When evaluating the `results/qc/*_hs_metrics.txt` and `coverage` files, keep an eye on these critical WES-specific metrics:
+
+1. **ON_TARGET_BASES:** Percentage of sequenced bases that fall within your target capture regions.
+   * Excellent: >80%
+   * Good: 70-80%
+   * Poor: <70%
+2. **MEAN_TARGET_COVERAGE:** Average coverage depth across target regions.
+   * Clinical applications: >100x
+   * Research applications: >50x
+3. **PCT_TARGET_BASES_10X/20X/30X:** Percentage of targets successfully covered at various depths.
+   * Clinical quality: >95% at 20x coverage
+4. **FOLD_ENRICHMENT:** How much more coverage the targeted regions received versus the genome average.
+   * Good enrichment: >40-fold
+   * Poor enrichment: <20-fold
+5. **AT_DROPOUT and GC_DROPOUT:** Coverage uniformity across different GC content.
+   * Good uniformity: <10% dropout
+   * Problematic: >20% dropout
