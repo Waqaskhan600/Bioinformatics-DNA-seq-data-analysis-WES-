@@ -64,10 +64,10 @@ samtools faidx hg38.fa
 Whole Exome Sequencing explicitly targets specific regions of the genome using probes or "baits". **Critical Point:** Always use the exact target region file (`.bed` or `.interval_list`) that matches your capture kit. Using the wrong target file will lead to incorrect quality metrics, missed variants, and suboptimal variant calling. 
 
 You must place your target regions BED file at `resources/reference/target_regions.bed` (or configure `TARGET_REGIONS` in the shell script). Common panels include:
-* **Agilent SureSelect** – Uses RNA baits, excellent uniformity
-* **Illumina Nextera** – DNA baits, good for degraded samples
-* **Roche SeqCap** – DNA baits, customizable designs
-* **Twist Bioscience** – Synthetic DNA baits, latest technology
+* **Agilent SureSelect** – Uses RNA baits, excellent uniformity (https://earray.chem.agilent.com/suredesign/)
+* **Illumina Nextera** – DNA baits, good for degraded samples (https://support.illumina.com/sequencing/sequencing_kits/nextera-dna-exome/downloads.html)
+* **Roche SeqCap** – DNA baits, customizable designs (https://diagnostics.roche.com/us/en/eservice-overview/technical-documents.html). Note: If the file is not listed, users often have to contact Roche Technical Support directly to request legacy design files. 
+* **Twist Bioscience** – Synthetic DNA baits, latest technology (Human Core Exome: https://www.twistbioscience.com/resources/data-files/ngs-human-core-exome-panel-bed-file) (Mitochondrial: https://www.twistbioscience.com/resources/data-files/twist-mitochondrial-dna-panel-bed-files) (Methylome: https://www.twistbioscience.com/resources/data-files/twist-human-methylome-panel-target-bed-file)
 
 **GATK Interval List Format:**
 Critical quality control tools like `CollectHsMetrics` require the BED file to be converted into a GATK-specific `.interval_list` format with a standard SAM/BAM header. If you only have the `.bed` file, you can easily convert it using:
