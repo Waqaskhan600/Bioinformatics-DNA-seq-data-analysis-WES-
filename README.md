@@ -18,6 +18,13 @@ The pipeline incorporates the following standard industry practices:
 
 ## Installation & Setup
 
+### 0. Clone the Repository
+First, clone this pipeline repository to your local machine and navigate into it:
+```bash
+git clone https://github.com/Waqaskhan600/Bioinformatics-DNA-seq-data-analysis-WES-.git
+cd Bioinformatics-DNA-seq-data-analysis-WES-
+```
+
 We highly recommend using [Conda](https://docs.conda.io/en/latest/miniconda.html) to manage your bioinformatics tools.
 
 ### 1. Create a Conda Environment
