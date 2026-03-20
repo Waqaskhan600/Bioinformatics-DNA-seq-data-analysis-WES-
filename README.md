@@ -181,6 +181,12 @@ When evaluating the `results/qc/` reports (`_hs_metrics.txt`, `_alignment_summar
    * **Solutions:** Adjust the `gatk VariantFiltration` parameters specifically for your sample's coverage depth. The defaults we configured (`QD < 2.0`, `DP < 20`) are a baseline for high-coverage WES.
    * **Validation:** Confirm highly suspicious output "PASS" variants with Sanger sequencing.
 
+4. **Poor Raw Read Quality or Technical Bias at Read Extremes**
+   * **Indicator:** The raw FastQC report shows erratic "Per Base Sequence Content" at the 5' end, or adapters are failing to be removed.
+   * **Solutions:** The pipeline defaults to standard, safe trimming (`--quality 20` and `--length 50`). If you spot persistent issues in FastQC, you can add advanced flags to the `trim_galore` command in `Step 0.2` of the script:
+     * **`--illumina` or `--nextera`**: By default, `trim_galore` is incredibly smart and will auto-detect which adapter your sequencing center used. However, if you know for an absolute fact you used a Nextera Exome kit, you can force it with `--nextera`.
+     * **`--clip_R1 5` and `--clip_R2 5`**: If the "Per Base Sequence Content" graph is chaotic for the very first 5 to 10 base pairs (very common in Illumina WES), this flag acts like a guillotine and mindlessly chops off the first 5 bases of every single read, regardless of quality, to remove that technical bias.
+
 ### Analytical Issues
 
 1. **Missing Expected Germline Variants**
