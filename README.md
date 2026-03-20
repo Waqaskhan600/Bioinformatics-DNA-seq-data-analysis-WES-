@@ -195,3 +195,10 @@ When evaluating the `results/qc/` reports (`_hs_metrics.txt`, `_alignment_summar
    * **Causes:** Low coverage in specific exons, or the variant is located in a non-captured region outside the baits.
    * **Solutions:** Manually review the `DepthOfCoverage` file for the specific gene coordinate to ensure it was properly sequenced.
    * **Prevention:** Always review your capture kit's exact probe content for genes of interest beforehand.
+
+## Contact & Collaboration
+
+🕺🎉 Thank you for using this pipeline! 🎉💃
+
+If you found this useful and informative, or if you are looking for collaboration and research assistance, please feel free to reach out to me on LinkedIn:  
+👉 [Waqas Khan - LinkedIn](https://www.linkedin.com/in/waqas-khan-3b937b184/)
