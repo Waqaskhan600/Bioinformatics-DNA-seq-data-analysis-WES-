@@ -104,8 +104,9 @@ A companion `ngs_config.yaml` has also been created. Future versions of this pip
 The pipeline automatically generates a structured output directory system branching off your `PROJECT_DIR`:
 - **`qc/`**: FastQC HTML quality reports for the raw input reads.
 - **`trimmed/`**: Cleaned paired-end fastq files produced by trim_galore.
-- **`results/aligned/`**: Sorted BAMs, GATK duplicate metrics, and duplicate-marked BAMs.
-- **`results/variants/`**: Unfiltered VCFs, hard-filtered VCFs, final `PASS` VCFs, and the final converted Excel-compatible `.csv` variant sheets.
+- **`aligned/`**: Sorted BAMs, GATK duplicate metrics, and duplicate-marked BAMs.
+- **`variants/`**: Unfiltered VCFs, hard-filtered VCFs, final `PASS` VCFs, and Excel-compatible `.csv` variant sheets.
+- **`logs/`**: Detailed terminal console outputs for every single step of the pipeline. If a step fails or produces unexpected results, check these log files for exact tool error messages.
 
 ## Variant Annotation
 

@@ -118,20 +118,22 @@ mkdir -p ${RESULTS_DIR}/aligned
 mkdir -p ${RESULTS_DIR}/variants
 mkdir -p ${RESULTS_DIR}/qc
 mkdir -p ${RESULTS_DIR}/trimmed
+LOG_DIR="${RESULTS_DIR}/logs"
+mkdir -p ${LOG_DIR}
 
 echo -e "\n[SUCCESS] All checks passed! Starting basic NGS pipeline for ${SAMPLE}...\n"
 
 # 0. Quality Control & Trimming
 echo "Step 0.1: Running FastQC on raw reads..."
 fastqc -t ${THREADS} -o ${RESULTS_DIR}/qc \
-    ${DATA_DIR}/${SAMPLE}_R1${EXT} ${DATA_DIR}/${SAMPLE}_R2${EXT}
+    ${DATA_DIR}/${SAMPLE}_R1${EXT} ${DATA_DIR}/${SAMPLE}_R2${EXT} 2>&1 | tee ${LOG_DIR}/0.1_fastqc.log
 
 echo "Step 0.2: Trimming adapters and low-quality bases..."
 trim_galore --paired --fastqc --cores ${THREADS} --gzip \
     --quality 20 \
     --length 50 \
     -o ${RESULTS_DIR}/trimmed \
-    ${DATA_DIR}/${SAMPLE}_R1${EXT} ${DATA_DIR}/${SAMPLE}_R2${EXT}
+    ${DATA_DIR}/${SAMPLE}_R1${EXT} ${DATA_DIR}/${SAMPLE}_R2${EXT} 2>&1 | tee ${LOG_DIR}/0.2_trim_galore.log
 
 # trim_galore default output naming for paired reads
 TRIMMED_R1="${RESULTS_DIR}/trimmed/${SAMPLE}_R1_val_1.fq.gz"
@@ -139,21 +141,21 @@ TRIMMED_R2="${RESULTS_DIR}/trimmed/${SAMPLE}_R2_val_2.fq.gz"
 
 # 1. Alignment with BWA-MEM
 echo "Step 1: Aligning reads..."
-bwa mem -t ${THREADS} -M -R "@RG\tID:${SAMPLE}\tSM:${SAMPLE}\tPL:ILLUMINA\tLB:lib1" \
+{ bwa mem -t ${THREADS} -M -R "@RG\tID:${SAMPLE}\tSM:${SAMPLE}\tPL:ILLUMINA\tLB:lib1" \
     ${REFERENCE} \
     ${TRIMMED_R1} ${TRIMMED_R2} | \
-    samtools sort -@ ${THREADS} -o ${RESULTS_DIR}/aligned/${SAMPLE}_sorted.bam
+    samtools sort -@ ${THREADS} -o ${RESULTS_DIR}/aligned/${SAMPLE}_sorted.bam; } 2>&1 | tee ${LOG_DIR}/1_align_sort.log
 
-samtools index ${RESULTS_DIR}/aligned/${SAMPLE}_sorted.bam
+samtools index ${RESULTS_DIR}/aligned/${SAMPLE}_sorted.bam 2>&1 | tee -a ${LOG_DIR}/1_align_sort.log
 
 # 2. Mark Duplicates with GATK
 echo "Step 2: Marking PCR and optical duplicates..."
 gatk MarkDuplicates \
     -I ${RESULTS_DIR}/aligned/${SAMPLE}_sorted.bam \
     -O ${RESULTS_DIR}/aligned/${SAMPLE}_marked_dup.bam \
-    -M ${RESULTS_DIR}/aligned/${SAMPLE}_dup_metrics.txt
+    -M ${RESULTS_DIR}/aligned/${SAMPLE}_dup_metrics.txt 2>&1 | tee ${LOG_DIR}/2_mark_duplicates.log
 
-samtools index ${RESULTS_DIR}/aligned/${SAMPLE}_marked_dup.bam
+samtools index ${RESULTS_DIR}/aligned/${SAMPLE}_marked_dup.bam 2>&1 | tee -a ${LOG_DIR}/2_mark_duplicates.log
 
 # 3. Base Quality Score Recalibration (BQSR)
 echo "Step 3: Generating BQSR recalibration table..."
@@ -162,16 +164,16 @@ gatk BaseRecalibrator \
     -I ${RESULTS_DIR}/aligned/${SAMPLE}_marked_dup.bam \
     --known-sites ${KNOWN_SITES_DBSNP} \
     --known-sites ${KNOWN_SITES_INDELS} \
-    -O ${RESULTS_DIR}/aligned/${SAMPLE}_recal_data.table
+    -O ${RESULTS_DIR}/aligned/${SAMPLE}_recal_data.table 2>&1 | tee ${LOG_DIR}/3_base_recalibrator.log
 
 echo "Step 3.1: Applying BQSR..."
 gatk ApplyBQSR \
     -R ${REFERENCE} \
     -I ${RESULTS_DIR}/aligned/${SAMPLE}_marked_dup.bam \
     --bqsr-recal-file ${RESULTS_DIR}/aligned/${SAMPLE}_recal_data.table \
-    -O ${RESULTS_DIR}/aligned/${SAMPLE}_bqsr.bam
+    -O ${RESULTS_DIR}/aligned/${SAMPLE}_bqsr.bam 2>&1 | tee ${LOG_DIR}/3.1_apply_bqsr.log
 
-samtools index ${RESULTS_DIR}/aligned/${SAMPLE}_bqsr.bam
+samtools index ${RESULTS_DIR}/aligned/${SAMPLE}_bqsr.bam 2>&1 | tee -a ${LOG_DIR}/3.1_apply_bqsr.log
 
 # 4. WES Specific Quality Metrics
 echo "Step 4: Calculating On-Target capture metrics..."
@@ -180,7 +182,7 @@ gatk CollectHsMetrics \
     -O ${RESULTS_DIR}/qc/${SAMPLE}_hs_metrics.txt \
     -R ${REFERENCE} \
     -BAIT_INTERVALS ${TARGET_INTERVALS} \
-    -TARGET_INTERVALS ${TARGET_INTERVALS}
+    -TARGET_INTERVALS ${TARGET_INTERVALS} 2>&1 | tee ${LOG_DIR}/4_collect_hs_metrics.log
  
 echo "Step 4.1: Calculating detailed coverage statistics..."
 gatk DepthOfCoverage \
@@ -192,19 +194,19 @@ gatk DepthOfCoverage \
     --summaryCoverageThreshold 20 \
     --summaryCoverageThreshold 30 \
     --summaryCoverageThreshold 50 \
-    --summaryCoverageThreshold 100
+    --summaryCoverageThreshold 100 2>&1 | tee ${LOG_DIR}/4.1_depth_of_coverage.log
 
 echo "Step 4.2: Collecting general alignment summary metrics..."
 gatk CollectAlignmentSummaryMetrics \
     -R ${REFERENCE} \
     -I ${RESULTS_DIR}/aligned/${SAMPLE}_bqsr.bam \
-    -O ${RESULTS_DIR}/qc/${SAMPLE}_alignment_summary.txt
+    -O ${RESULTS_DIR}/qc/${SAMPLE}_alignment_summary.txt 2>&1 | tee ${LOG_DIR}/4.2_alignment_summary.log
  
 echo "Step 4.3: Collecting paired-end insert size metrics..."
 gatk CollectInsertSizeMetrics \
     -I ${RESULTS_DIR}/aligned/${SAMPLE}_bqsr.bam \
     -O ${RESULTS_DIR}/qc/${SAMPLE}_insert_size_metrics.txt \
-    -H ${RESULTS_DIR}/qc/${SAMPLE}_insert_size_histogram.pdf
+    -H ${RESULTS_DIR}/qc/${SAMPLE}_insert_size_histogram.pdf 2>&1 | tee ${LOG_DIR}/4.3_insert_size.log
 
 # 5. Variant Calling with GATK HaplotypeCaller
 echo "Step 5: Variant Calling..."
@@ -212,7 +214,7 @@ gatk HaplotypeCaller \
     -R ${REFERENCE} \
     -I ${RESULTS_DIR}/aligned/${SAMPLE}_bqsr.bam \
     -L ${TARGET_REGIONS} \
-    -O ${RESULTS_DIR}/variants/${SAMPLE}_raw_variants.vcf.gz
+    -O ${RESULTS_DIR}/variants/${SAMPLE}_raw_variants.vcf.gz 2>&1 | tee ${LOG_DIR}/5_haplotype_caller.log
 
 # 6. Apply variant filters optimized for high-coverage WES data
 echo "Step 6: Filtering variants..."
@@ -227,26 +229,28 @@ gatk VariantFiltration \
     --filter-expression "ReadPosRankSum < -8.0" --filter-name "LowReadPosRankSum" \
     --filter-expression "DP < 20" --filter-name "LowDepth" \
     --filter-expression "DP > 500" --filter-name "HighDepth" \
-    -O ${RESULTS_DIR}/variants/${SAMPLE}_filtered.vcf.gz
+    -O ${RESULTS_DIR}/variants/${SAMPLE}_filtered.vcf.gz 2>&1 | tee ${LOG_DIR}/6_variant_filtration.log
  
 # 7. Extract high-quality variants
 echo "Step 7: Extracting PASS variants..."
 bcftools view -f PASS -Oz \
     -o ${RESULTS_DIR}/variants/${SAMPLE}_pass.vcf.gz \
-    ${RESULTS_DIR}/variants/${SAMPLE}_filtered.vcf.gz
+    ${RESULTS_DIR}/variants/${SAMPLE}_filtered.vcf.gz 2>&1 | tee ${LOG_DIR}/7_extract_pass.log
  
-bcftools index -t ${RESULTS_DIR}/variants/${SAMPLE}_pass.vcf.gz
+bcftools index -t ${RESULTS_DIR}/variants/${SAMPLE}_pass.vcf.gz 2>&1 | tee -a ${LOG_DIR}/7_extract_pass.log
+
 # 8. Convert VCF to CSV format for Excel
 echo "Step 8: Converting PASS variants to CSV format..."
 gatk VariantsToTable \
     -V ${RESULTS_DIR}/variants/${SAMPLE}_pass.vcf.gz \
     -F CHROM -F POS -F ID -F REF -F ALT -F QUAL -F FILTER \
     -F DP -F QD -F FS -F MQ -F SOR -F MQRankSum -F ReadPosRankSum \
-    -O ${RESULTS_DIR}/variants/${SAMPLE}_pass.tsv
+    -O ${RESULTS_DIR}/variants/${SAMPLE}_pass.tsv 2>&1 | tee ${LOG_DIR}/8_variants_to_table.log
 
 # Convert the TSV output to true comma-separated CSV
-awk 'BEGIN { FS="\t"; OFS="," } {$1=$1; print}' ${RESULTS_DIR}/variants/${SAMPLE}_pass.tsv > ${RESULTS_DIR}/variants/${SAMPLE}_pass.csv
+awk 'BEGIN { FS="\t"; OFS="," } {$1=$1; print}' ${RESULTS_DIR}/variants/${SAMPLE}_pass.tsv > ${RESULTS_DIR}/variants/${SAMPLE}_pass.csv 2>&1 | tee -a ${LOG_DIR}/8_variants_to_table.log
 
 echo -e "\n[SUCCESS] Pipeline complete! High-quality variants for ${SAMPLE} are saved at:"
 echo " - VCF (for tools): ${RESULTS_DIR}/variants/${SAMPLE}_pass.vcf.gz"
 echo " - CSV (for Excel): ${RESULTS_DIR}/variants/${SAMPLE}_pass.csv"
+echo " - Run Logs (for review): ${LOG_DIR}/"
