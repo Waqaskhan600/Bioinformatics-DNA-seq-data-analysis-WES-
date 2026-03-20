@@ -72,6 +72,14 @@ gatk BedToIntervalList \
     -SD resources/reference/hg38.dict
 ```
 
+### What if I don't have a Target BED file?
+
+While target files are **highly recommended** for WES to calculate capture efficiency and restrict variant calling to valid exons, they are not strictly mandatory to generate a VCF. If you absolutely do not have the BED file from the sequencing center:
+1. You **must** comment out or remove `gatk CollectHsMetrics` and `gatk DepthOfCoverage` in the script.
+2. You **must** remove the `-L ${TARGET_REGIONS}` flag from `gatk HaplotypeCaller` (Step 5). 
+
+*Note: Without the `-L` flag, HaplotypeCaller will blindly search the entire genome for variants instead of just the exome, which will take significantly longer. Furthermore, you will lose all metrics on whether the physical capture kit actually worked and whether you achieved enough depth to trust your variants!*
+
 ## Usage
 
 *Note: The pipeline includes built-in **Pre-Run Validation Checks** that will ensure you have correctly downloaded the reference genome, installed all software dependencies, and placed your input data before executing any bioinformatics tools. If anything is missing (for example, if you forgot to run `conda activate wes_pipeline`), the script will catch the missing dependencies, halt immediately, and provide the exact commands you need to fix the issue!*
