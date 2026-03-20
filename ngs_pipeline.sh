@@ -21,6 +21,28 @@ THREADS=6 # update Number of threads to use
 # Pre-Run Validation Checks
 # ==========================================
 
+# 0. Check Software Dependencies
+MISSING_DEPS=0
+REQUIRED_TOOLS=("fastqc" "trim_galore" "bwa" "samtools" "gatk" "bcftools" "awk")
+
+echo -e "\n[INFO] Validating software dependencies..."
+for tool in "${REQUIRED_TOOLS[@]}"; do
+    if command -v $tool &> /dev/null; then
+        echo -e "  [OK] $tool is installed."
+    else
+        echo -e "  [MISSING] $tool is NOT found in your PATH."
+        MISSING_DEPS=1
+    fi
+done
+
+if [ $MISSING_DEPS -eq 1 ]; then
+    echo -e "\n[ERROR] Required bioinformatics tools are missing."
+    echo "Please ensure you have activated your Conda environment before running:"
+    echo "    conda activate wes_pipeline"
+    echo -e "If you haven't created it yet, run: conda env create -f environment.yaml\n"
+    exit 1
+fi
+
 # 1. Check if Reference Genome exists
 if [ ! -f "${REFERENCE}" ]; then
     echo -e "\n[ERROR] Reference genome not found at: ${REFERENCE}"

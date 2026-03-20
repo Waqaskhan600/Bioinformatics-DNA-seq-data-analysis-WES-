@@ -74,7 +74,7 @@ gatk BedToIntervalList \
 
 ## Usage
 
-*Note: The pipeline includes built-in **Pre-Run Validation Checks** that will ensure you have correctly downloaded the reference genome and placed your input data before executing any bioinformatics tools. If anything is missing, the script will halt immediately and provide the exact commands you need to fix the issue!*
+*Note: The pipeline includes built-in **Pre-Run Validation Checks** that will ensure you have correctly downloaded the reference genome, installed all software dependencies, and placed your input data before executing any bioinformatics tools. If anything is missing (for example, if you forgot to run `conda activate wes_pipeline`), the script will catch the missing dependencies, halt immediately, and provide the exact commands you need to fix the issue!*
 
 1. **Configure the pipeline:** Open `ngs_pipeline.sh` and define the `PROJECT_DIR` variable to point to your project's absolute path. If you are running the script directly from within your project directory, you can simply set it to `PROJECT_DIR="$PWD"`. All other directories (data, outputs, etc.) will branch off from this folder.
 2. Place your raw input reads in the `data/` directory inside your project folder (e.g., `sample_1_R1.fastq.gz`, `sample_1_R2.fastq.gz`).
