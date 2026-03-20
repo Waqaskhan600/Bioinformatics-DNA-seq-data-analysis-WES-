@@ -95,13 +95,18 @@ if [ ! -f "${TARGET_INTERVALS}" ]; then
     exit 1
 fi
 
-# 2. Check if Input FastQ files exist
-if [ ! -f "${DATA_DIR}/${SAMPLE}_R1.fastq.gz" ] || [ ! -f "${DATA_DIR}/${SAMPLE}_R2.fastq.gz" ]; then
+# 2. Check if Input FastQ files exist and distinguish extension
+if [ -f "${DATA_DIR}/${SAMPLE}_R1.fastq.gz" ] && [ -f "${DATA_DIR}/${SAMPLE}_R2.fastq.gz" ]; then
+    EXT=".fastq.gz"
+elif [ -f "${DATA_DIR}/${SAMPLE}_R1.fastq" ] && [ -f "${DATA_DIR}/${SAMPLE}_R2.fastq" ]; then
+    EXT=".fastq"
+    echo -e "\n[WARNING] Using uncompressed .fastq data! It is highly recommended to gzip your FASTQs to save space."
+else
     echo -e "\n[ERROR] Input data not found for sample: ${SAMPLE}"
     echo "Please ensure your raw paired-end reads are placed in the data directory: ${DATA_DIR}"
-    echo "Expected files:"
-    echo "  - ${SAMPLE}_R1.fastq.gz"
-    echo "  - ${SAMPLE}_R2.fastq.gz"
+    echo "Expected files (either compressed or uncompressed):"
+    echo "  - ${SAMPLE}_R1.fastq.gz OR ${SAMPLE}_R1.fastq"
+    echo "  - ${SAMPLE}_R2.fastq.gz OR ${SAMPLE}_R2.fastq"
     echo -e "\nIf the data folder doesn't exist yet, you can create it with:"
     echo "  mkdir -p ${DATA_DIR}"
     echo -e "\nOnce your files are in the correct location, come back and run this script again!"
@@ -119,14 +124,14 @@ echo -e "\n[SUCCESS] All checks passed! Starting basic NGS pipeline for ${SAMPLE
 # 0. Quality Control & Trimming
 echo "Step 0.1: Running FastQC on raw reads..."
 fastqc -t ${THREADS} -o ${RESULTS_DIR}/qc \
-    ${DATA_DIR}/${SAMPLE}_R1.fastq.gz ${DATA_DIR}/${SAMPLE}_R2.fastq.gz
+    ${DATA_DIR}/${SAMPLE}_R1${EXT} ${DATA_DIR}/${SAMPLE}_R2${EXT}
 
 echo "Step 0.2: Trimming adapters and low-quality bases..."
-trim_galore --paired --fastqc --cores ${THREADS} \
+trim_galore --paired --fastqc --cores ${THREADS} --gzip \
     --quality 20 \
     --length 50 \
     -o ${RESULTS_DIR}/trimmed \
-    ${DATA_DIR}/${SAMPLE}_R1.fastq.gz ${DATA_DIR}/${SAMPLE}_R2.fastq.gz
+    ${DATA_DIR}/${SAMPLE}_R1${EXT} ${DATA_DIR}/${SAMPLE}_R2${EXT}
 
 # trim_galore default output naming for paired reads
 TRIMMED_R1="${RESULTS_DIR}/trimmed/${SAMPLE}_R1_val_1.fq.gz"

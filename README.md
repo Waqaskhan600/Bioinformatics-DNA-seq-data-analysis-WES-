@@ -86,6 +86,7 @@ While target files are **highly recommended** for WES to calculate capture effic
 
 1. **Configure the pipeline:** Open `ngs_pipeline.sh` and define the `PROJECT_DIR` variable to point to your project's absolute path. If you are running the script directly from within your project directory, you can simply set it to `PROJECT_DIR="$PWD"`. All other directories (data, outputs, etc.) will branch off from this folder.
 2. Place your raw input reads in the `data/` directory inside your project folder (e.g., `sample_1_R1.fastq.gz`, `sample_1_R2.fastq.gz`).
+   * **Tip on Storage:** While this pipeline dynamically accepts uncompressed `.fastq` files automatically, they are incredibly large. It is considered an industry best practice to compress them yourself to save immense disk space (70-80% reduction) by running `gzip input/*.fastq` before starting.
 3. Update the `REFERENCE` and `SAMPLE` variables inside `ngs_pipeline.sh` to match your reference genome and sample name.
 4. Make the script executable:
    ```bash
