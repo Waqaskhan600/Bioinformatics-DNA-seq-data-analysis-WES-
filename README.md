@@ -1,4 +1,4 @@
-# Basic Whole Exome Sequencing (WES) Pipeline
+# Whole Exome Sequencing (WES) Pipeline
 
 This repository contains a simple, linear Next-Generation Sequencing (NGS) pipeline using bash for paired-end FastQ data processing, optimized for Whole Exome Sequencing (WES).
 
