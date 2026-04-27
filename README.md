@@ -209,3 +209,4 @@ Thank you for using this pipeline!
 
 If you found this useful and informative, or if you are looking for collaboration and research assistance, please feel free to reach out to me on LinkedIn:
 [Waqas Khan - LinkedIn](https://www.linkedin.com/in/waqas-khan-3b937b184/)
+[Waqas Khan Upwork](https://www.upwork.com/freelancers/~01f83f8629c246e22a)
